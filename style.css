@@ -1,0 +1,42 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+#comix-title-container {
+    margin-bottom: 20px;
+}
+
+#comix-title {
+    font-size: 24px;
+    width: 50%;
+}
+
+.image-container {
+    margin: 10px;
+    display: inline-block;
+}
+
+textarea {
+    width: 290px; /* Adjust based on image width */
+    height: 50px;
+}
+
+#generate-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 18px;
+}
+
+#final-image-container {
+    margin-top: 20px;
+}
+
+/* Placeholder image styles */
+img[src="placeholder.jpg"] {
+    width: 300px; /* Adjust based on actual image size */
+    height: 200px; /* Adjust based on actual image size */
+    border: 2px dashed #ccc;
+    display: block;
+    margin: 10px auto;
+}

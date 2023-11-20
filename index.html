@@ -1,5 +1,33 @@
 <!DOCTYPE html>
-<html>
-  <head>test</head>
-  <body>Hello world!</body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Comix Generator Demo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Comix Generator Demo</h1>
+    <div id="comix-title-container">
+        <input id="comix-title" type="text" placeholder="Comix Title">
+    </div>
+    <div id="storyboard">
+        <div class="image-container">
+            <img id="image1" src="placeholder.jpg" alt="Generated Image 1">
+            <textarea id="caption1" placeholder="Caption 1"></textarea>
+        </div>
+        <div class="image-container">
+            <img id="image2" src="placeholder.jpg" alt="Generated Image 2">
+            <textarea id="caption2" placeholder="Caption 2"></textarea>
+        </div>
+        <div class="image-container">
+            <img id="image3" src="placeholder.jpg" alt="Generated Image 3">
+            <textarea id="caption3" placeholder="Caption 3"></textarea>
+        </div>
+    </div>
+    <button id="generate-button">Generate Comix</button>
+    <div id="final-image-container">
+        <img id="final-image" src="" alt="Final Generated Comix">
+    </div>
+    <script src="script.js"></script>
+</body>
 </html>

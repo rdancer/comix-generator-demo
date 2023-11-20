@@ -6,7 +6,7 @@ document.getElementById('generate-button').addEventListener('click', function() 
         document.getElementById('caption3').value
     ];
 
-    fetch('http://api.comix-generator.rdancer.org/generate-images', {
+    fetch('https://api.comix-generator.rdancer.org/generate-images', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

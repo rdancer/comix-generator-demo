@@ -19,6 +19,7 @@ document.getElementById('generate-button').addEventListener('click', function() 
         data.images.forEach((imageData, index) => {
             let imgElement = document.getElementById('image' + (index + 1));
             imgElement.src = `data:${imageData.content_type};base64,${imageData.base64}`;
+            imgElement.classList.add('generated');
             console.log('Prompt for image ' + (index + 1) + ': ' + imageData.prompt); // For debugging
         });
         

@@ -12,14 +12,19 @@ body {
     width: 50%;
 }
 
+/* Ensure the container of the image and the caption is aligned to the top */
 .image-container {
     margin: 10px;
     display: inline-block;
+    vertical-align: top; /* Align the tops of inline-block elements */
 }
 
+/* Adjust the width of the textarea to match the image */
 textarea {
-    width: 290px; /* Adjust based on image width */
+    width: 300px; /* Match the image width */
     height: 50px;
+    display: block; /* Display block to ensure it takes up the full width */
+    margin: 0 auto 10px auto; /* Center the textarea and add margin at the bottom */
 }
 
 #generate-button {
@@ -32,11 +37,19 @@ textarea {
     margin-top: 20px;
 }
 
-/* Placeholder image styles */
-img[src="placeholder.jpg"] {
+.image-container img {
     width: 300px; /* Adjust based on actual image size */
     height: 200px; /* Adjust based on actual image size */
-    border: 2px dashed #ccc;
     display: block;
     margin: 10px auto;
+}
+
+/* Placeholder image styles */
+img.generated[src="placeholder.jpg"] {
+    border: 3px dashed #ccc;
+}
+
+/* Style for the generated images */
+img.generated {
+    border: 3px solid black; /* Solid border for generated images */
 }

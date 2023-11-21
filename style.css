@@ -53,3 +53,26 @@ img.generated[src="placeholder.jpg"] {
 img.generated {
     border: 3px solid black; /* Solid border for generated images */
 }
+
+
+/* Footer styling */
+footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: #f2f2f2; /* Change to desired background color */
+    color: black; /* Change to desired text color */
+    text-align: center;
+    padding: 5px;
+}
+
+/* Footer link styling */
+footer a {
+    color: #007bff; /* Change to desired link color */
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}

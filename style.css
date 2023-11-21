@@ -39,7 +39,7 @@ textarea {
 
 .image-container img {
     width: 300px; /* Adjust based on actual image size */
-    height: 200px; /* Adjust based on actual image size */
+    height: 300px; /* Adjust based on actual image size */
     display: block;
     margin: 10px auto;
 }
@@ -52,4 +52,27 @@ img.generated[src="placeholder.jpg"] {
 /* Style for the generated images */
 img.generated {
     border: 3px solid black; /* Solid border for generated images */
+}
+
+
+/* Footer styling */
+footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: #f2f2f2; /* Change to desired background color */
+    color: black; /* Change to desired text color */
+    text-align: center;
+    padding: 5px;
+}
+
+/* Footer link styling */
+footer a {
+    color: #007bff; /* Change to desired link color */
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
 }

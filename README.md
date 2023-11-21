@@ -10,8 +10,10 @@ Sometimes the pictures do not quite match the prompts -- I'm planning to use GPT
 
 You can [try it here](https://comix-generator.rdancer.org) if you want.
 
-![photo-F40B48DA-CCE6-4C54-BDB8-8EABA248EF2D](https://github.com/rdancer/comix-generator-demo/assets/51028/aa4b4c64-a8f7-498b-9b4e-d2cbd3f27563)
+![Screenshot](screenshot2.png)
 --
 ![Screenshot](screenshot1.png)
 --
-![Screenshot](screenshot2.png)
+![download (1)](https://github.com/rdancer/comix-generator-demo/assets/51028/43133fe2-edb4-4cee-9195-694dd18a9efc)
+--
+![photo-F40B48DA-CCE6-4C54-BDB8-8EABA248EF2D](https://github.com/rdancer/comix-generator-demo/assets/51028/aa4b4c64-a8f7-498b-9b4e-d2cbd3f27563)

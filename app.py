@@ -171,9 +171,11 @@ def create_composite_image(images, captions, title):
     try:
         title_font = ImageFont.truetype("DejaVuSans-Bold.ttf", 24)  # Bold font for title
         caption_font = ImageFont.truetype("DejaVuSans.ttf", 16)  # Increased size for captions
+        logo_font = ImageFont.truetype("DejaVuSansMono.ttf", 12)  # Smaller font for logo
     except IOError:
         title_font = ImageFont.load_default()
         caption_font = ImageFont.load_default()
+        logo_font = ImageFont.load_default()
 
     # Calculate height needed for captions dynamically
     caption_draw = ImageDraw.Draw(Image.new('RGB', (1, 1)))
@@ -183,7 +185,6 @@ def create_composite_image(images, captions, title):
     # Total dimensions of the final image
     total_width = (panel_width * len(images)) + (gap * (len(images) - 1)) + (border * 2)
     total_height = panel_height + title_height + title_space + max_caption_height + gap + (border * 2)
-
     final_image = Image.new('RGB', (total_width, total_height), 'white')
     draw = ImageDraw.Draw(final_image)
 
@@ -199,6 +200,16 @@ def create_composite_image(images, captions, title):
         
         caption_position = (x_offset, y_offset + panel_height + gap)
         draw_text(draw, caption, caption_position, caption_font, panel_width)
+
+    # Draw logo
+    logo_width = logo_font.getbbox(LOGO_TEXT)[2]
+    logo_height = logo_font.getbbox(LOGO_TEXT)[3]
+    title_bottom = border + title_font.getbbox(title)[3]
+    # The logo needs optically adjusted to look aligned
+    x_adjustment = 1
+    y_adjustment = 3
+    logo_position = (total_width - logo_width - border - x_adjustment, title_bottom - logo_height + y_adjustment)
+    draw.text(logo_position, LOGO_TEXT, font=logo_font, fill='darkgray')
 
     return final_image
 

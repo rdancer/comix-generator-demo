@@ -1,37 +1,46 @@
 # app.py (Flask Backend)
 
+import openai
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from PIL import Image, ImageDraw, ImageFont
 import io
 import base64
 import textwrap
+import os
 
 app = Flask(__name__)
 CORS(app)
 
+# openai.api_key = os.getenv('OPENAI_API_KEY') # This is the default
+
 @app.route('/generate-images', methods=['POST'])
 def generate_images():
     data = request.json
-    captions = data['captions']
+    captions = [caption.strip() for caption in data['captions']]
     title = data['title']
-    
-    # Placeholder for DALL-E image generation based on captions
-    images = [generate_placeholder_image(caption) for caption in captions]
-    
-    # Placeholder for creating a composite image from generated images
+
+    # Generate individual panels using DALL-E image generation based on captions
+    images = []
+    revised_prompts = []
+    for caption in captions:
+        image, revised_prompt = generate_image(caption)
+        images.append(image)
+        revised_prompts.append(revised_prompt)
+
+    # Compose the full strip from generated images
     final_image = create_composite_image(images, captions, title)
-    
+
     images_data = [{
         'content_type': 'image/jpeg',
         'base64': image_to_base64(image, 'JPEG'),
-        'prompt': caption
-    } for caption, image in zip(captions, images)]
+        'original_prompt': caption,
+        'revised_prompt': revised_prompt
+    } for caption, revised_prompt, image in zip(captions, revised_prompts, images)]
     
     final_image_data = {
         'content_type': 'image/png',
         'base64': image_to_base64(final_image, 'PNG'),
-        'prompt': 'Composite image'
     }
     
     return jsonify({
@@ -39,13 +48,35 @@ def generate_images():
         'finalImage': final_image_data
     })
 
-def generate_placeholder_image(caption):
-    # This function would interface with DALL-E to generate an image
-    # For now, it returns a placeholder image with the caption
-    image = Image.new('RGB', (400, 400), color='white')
-    draw = ImageDraw.Draw(image)
-    draw.text((10, 10), caption, fill='black')
-    return image
+def generate_image(caption: str) -> (Image, str):
+    """
+    Use the OpenAI client to generate an image
+    """
+    response = openai.images.generate(
+        model="dall-e-3", # Defaults to v2 as of November 2023
+        prompt=caption,
+        n=1,
+        size="1024x1024",  # Setting the desired image size
+        response_format="b64_json"  # Requesting base64-encoded image
+    )
+
+    # Extract and decode the base64-encoded image
+    first_image = response.data[0]
+    b64_data = first_image.b64_json
+    decoded_image = base64.b64decode(b64_data)
+
+    # Load the image into PIL and return it
+    image = Image.open(io.BytesIO(decoded_image))
+    resized_image = image.resize((400, 400), Image.Resampling.LANCZOS)
+
+    try:
+        revised_prompt = response[0].revised_prompt
+        if revised_prompt is None:
+            revised_prompt = caption
+    except:
+        revised_prompt = caption
+
+    return resized_image, revised_prompt
 
 def draw_text(draw, text, position, font, container_width):
     """

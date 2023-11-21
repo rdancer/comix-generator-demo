@@ -19,31 +19,36 @@ CORS(app)
 
 @app.route('/generate-images', methods=['POST'])
 def generate_images():
-    data = request.json
-    captions = [caption.strip() for caption in data['captions']]
-    title = data['title']
+    try:
+        data = request.json
+        captions = [caption.strip() for caption in data['captions']]
+        title = data['title']
 
-    # Generate individual panels using DALL-E image generation based on captions
-    images = _generate_images(captions)
+        # Generate individual panels using DALL-E image generation based on captions
+        images = _generate_images(captions)
 
-    # Compose the full strip from generated images
-    final_image = create_composite_image(images, captions, title)
+        # Compose the full strip from generated images
+        final_image = create_composite_image(images, captions, title)
 
-    images_data = [{
-        'content_type': 'image/jpeg',
-        'base64': image_to_base64(image, 'JPEG'),
-        'original_prompt': caption,
-    } for caption, image in zip(captions, images)]
-    
-    final_image_data = {
-        'content_type': 'image/png',
-        'base64': image_to_base64(final_image, 'PNG'),
-    }
-    
-    return jsonify({
-        'images': images_data,
-        'finalImage': final_image_data
-    })
+        images_data = [{
+            'content_type': 'image/jpeg',
+            'base64': image_to_base64(image, 'JPEG'),
+            'original_prompt': caption,
+        } for caption, image in zip(captions, images)]
+        
+        final_image_data = {
+            'content_type': 'image/png',
+            'base64': image_to_base64(final_image, 'PNG'),
+        }
+        
+        return jsonify({
+            'images': images_data,
+            'finalImage': final_image_data
+        })
+    except Exception as e:
+        # Return a 500 Internal Server Error with the exception message
+        return jsonify({'error': str(e)}), 500
+
 
 def create_fourth_panel_prompt(captions: list[str]) -> str:
     """
@@ -83,7 +88,7 @@ def _generate_images(captions: list[str]) -> list[Image]:
 def chop_up_2x2_image_grid(image):
     """
     Given an image that is a 2x2 grid of panels, retun a list of the four indivial images.
-    """
+    """ 
     width, height = image.size
     panel_width = width // 2
     panel_height = height // 2
@@ -104,7 +109,7 @@ def generate_2x2_image_grid(captions: list[str]) -> list[Image]:
     """
     Use the OpenAI client to generate a composite 2x2 grid of images.
     """
-    prompt = "Draw a 2x2 grid of four pictures:\n\n"
+    prompt = "Draw a 2x2 grid of pictures:\n\n"
     for caption in [caption.replace('\n', ' ') for caption in captions]:
         prompt += f"* {caption}\n"
     print(f"DEBUG [_generate_images] prompt: {prompt}")

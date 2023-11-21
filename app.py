@@ -5,6 +5,7 @@ from flask_cors import CORS
 from PIL import Image, ImageDraw, ImageFont
 import io
 import base64
+import textwrap
 
 app = Flask(__name__)
 CORS(app)
@@ -46,49 +47,68 @@ def generate_placeholder_image(caption):
     draw.text((10, 10), caption, fill='black')
     return image
 
+def draw_text(draw, text, position, font, container_width):
+    """
+    Draw the text within a fixed width using getbbox method.
+    """
+    wrapped_lines = textwrap.wrap(text, width=40)  # Initial guess for wrapping
+    y_offset = position[1]
+    for line in wrapped_lines:
+        # Check if the line fits within the specified width, break it if it doesn't
+        while font.getbbox(line)[2] > container_width:
+            # Remove the last word until the line fits the container
+            line = line.rsplit(' ', 1)[0]
+        
+        # Draw the line on the image
+        draw.text((position[0], y_offset), line, font=font, fill='black')
+        
+        # Update the y_offset to move to the next line
+        y_offset += font.getbbox(line)[3] + 5  # Add space between lines
+
+
 def create_composite_image(images, captions, title):
-    image_width, image_height = images[0].size
-    gap = 10  # White gap between images
-    border = 3  # Border width around each image
-    title_height = 24  # Space for the title text
-    caption_height = 24  # Space for the caption text
-    title_space = 30  # Additional space reserved for the title at the top
+    # Constants for layout
+    panel_width = 400  # Fixed width for each panel
+    panel_height = 400
+    gap = 10  # Gap between panels
+    border = 3  # Border around each panel
+    title_height = 60  # Space for the title at the top
+    caption_height = 60  # Space for the captions at the bottom
 
-    # Total dimensions including borders, gaps, and title space
-    total_width = (image_width * 3) + (gap * 2) + (border * 6)
-    total_height = image_height + caption_height + title_space + (border * 4)
-
-    # Create the final composite image with additional space for title
+    # Create the final composite image with additional space for title and captions
+    total_width = (panel_width * len(images)) + (gap * (len(images) - 1)) + (border * 2)
+    total_height = panel_height + title_height + caption_height + (border * 2)
     final_image = Image.new('RGB', (total_width, total_height), 'white')
     draw = ImageDraw.Draw(final_image)
 
-    # Define the fonts for title and captions
+    # Load fonts
     try:
-        title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24)  # Bold font for title
-        caption_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 16)  # Regular font for captions
+        title_font = ImageFont.truetype("DejaVuSans-Bold.ttf", 24)  # Adjust font and size as needed
+        caption_font = ImageFont.truetype("DejaVuSans.ttf", 16)  # Adjust font and size as needed
     except IOError:
         title_font = ImageFont.load_default()
         caption_font = ImageFont.load_default()
 
-    # Draw the title at the top left
-    draw.text((border, border), title, fill='black', font=title_font)
+    # Draw the title at the top
+    draw.text((border, border), title, font=title_font, fill='black')
 
-    # Draw images with borders and captions
+    # Draw panels, borders, and captions
     for i, (image, caption) in enumerate(zip(images, captions)):
-        # Calculate x offset for each image considering previous images, gaps, and borders
-        x_offset = (image_width + gap + border * 2) * i
-        # Paste image onto the final image with an offset for borders and title space
-        final_image.paste(image, (x_offset + border, border + title_space))
-        # Draw border around the image
+        x_offset = border + (panel_width + gap) * i
+        y_offset = border + title_height
+        # Paste panel image
+        final_image.paste(image, (x_offset, y_offset))
+        # Draw border around the panel
         draw.rectangle(
-            [x_offset, title_space, x_offset + image_width + (border * 2), title_space + image_height + (border * 2)],
-            outline='black', width=border)
-        # Draw caption below the image
-        draw.text(
-            (x_offset + border, title_space + image_height + (border * 2)),
-            caption, fill='black', font=caption_font)
+            [x_offset - border, y_offset - border, x_offset + panel_width + border, y_offset + panel_height + border],
+            outline='black', width=border
+        )
+        # Draw the caption within the width of the panel
+        caption_position = (x_offset, y_offset + panel_height + border)
+        draw_text(draw, caption, caption_position, caption_font, panel_width)
 
     return final_image
+
 def image_to_base64(image, format):
     buffered = io.BytesIO()
     image.save(buffered, format=format)

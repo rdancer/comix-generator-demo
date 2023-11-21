@@ -54,6 +54,10 @@ img.generated {
     border: 3px solid black; /* Solid border for generated images */
 }
 
+/* when the final image doesn't have src attribute yet */
+#final-image:not([src]) {
+    display: none;
+}
 
 /* Footer styling */
 footer {

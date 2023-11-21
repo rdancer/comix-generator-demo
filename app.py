@@ -49,7 +49,7 @@ def generate_placeholder_image(caption):
 
 def draw_text(draw, text, position, font, container_width):
     """
-    Draw the text within a fixed width using getbbox method.
+    Draw the text within a fixed width and return the height of the drawn text.
     """
     wrapped_lines = textwrap.wrap(text, width=40)  # Initial guess for wrapping
     y_offset = position[1]
@@ -65,46 +65,47 @@ def draw_text(draw, text, position, font, container_width):
         # Update the y_offset to move to the next line
         y_offset += font.getbbox(line)[3] + 5  # Add space between lines
 
+    return y_offset - position[1]  # Return the height of the drawn text
 
 def create_composite_image(images, captions, title):
-    # Constants for layout
-    panel_width = 400  # Fixed width for each panel
+    panel_width = 400
     panel_height = 400
-    gap = 10  # Gap between panels
+    gap = 10  # Gap between panels and above caption
     border = 3  # Border around each panel
-    title_height = 60  # Space for the title at the top
-    caption_height = 60  # Space for the captions at the bottom
-
-    # Create the final composite image with additional space for title and captions
-    total_width = (panel_width * len(images)) + (gap * (len(images) - 1)) + (border * 2)
-    total_height = panel_height + title_height + caption_height + (border * 2)
-    final_image = Image.new('RGB', (total_width, total_height), 'white')
-    draw = ImageDraw.Draw(final_image)
+    title_height = 24
+    title_space = 10  # Reduced gap below the title
 
     # Load fonts
     try:
-        title_font = ImageFont.truetype("DejaVuSans-Bold.ttf", 24)  # Adjust font and size as needed
-        caption_font = ImageFont.truetype("DejaVuSans.ttf", 16)  # Adjust font and size as needed
+        title_font = ImageFont.truetype("DejaVuSans-Bold.ttf", 24)  # Bold font for title
+        caption_font = ImageFont.truetype("DejaVuSans.ttf", 16)  # Increased size for captions
     except IOError:
         title_font = ImageFont.load_default()
         caption_font = ImageFont.load_default()
 
-    # Draw the title at the top
+    # Calculate height needed for captions dynamically
+    caption_draw = ImageDraw.Draw(Image.new('RGB', (1, 1)))
+    caption_heights = [draw_text(caption_draw, caption, (0, 0), caption_font, panel_width) for caption in captions]
+    max_caption_height = max(caption_heights)
+
+    # Total dimensions of the final image
+    total_width = (panel_width * len(images)) + (gap * (len(images) - 1)) + (border * 2)
+    total_height = panel_height + title_height + title_space + max_caption_height + gap + (border * 2)
+
+    final_image = Image.new('RGB', (total_width, total_height), 'white')
+    draw = ImageDraw.Draw(final_image)
+
+    # Draw title
     draw.text((border, border), title, font=title_font, fill='black')
 
-    # Draw panels, borders, and captions
+    # Draw images, borders, and captions
     for i, (image, caption) in enumerate(zip(images, captions)):
         x_offset = border + (panel_width + gap) * i
-        y_offset = border + title_height
-        # Paste panel image
+        y_offset = border + title_height + title_space
         final_image.paste(image, (x_offset, y_offset))
-        # Draw border around the panel
-        draw.rectangle(
-            [x_offset - border, y_offset - border, x_offset + panel_width + border, y_offset + panel_height + border],
-            outline='black', width=border
-        )
-        # Draw the caption within the width of the panel
-        caption_position = (x_offset, y_offset + panel_height + border)
+        draw.rectangle([x_offset - border, y_offset - border, x_offset + panel_width + border, y_offset + panel_height + border], outline='black', width=border)
+        
+        caption_position = (x_offset, y_offset + panel_height + gap)
         draw_text(draw, caption, caption_position, caption_font, panel_width)
 
     return final_image

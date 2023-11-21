@@ -39,7 +39,7 @@ textarea {
 
 .image-container img {
     width: 300px; /* Adjust based on actual image size */
-    height: 200px; /* Adjust based on actual image size */
+    height: 300px; /* Adjust based on actual image size */
     display: block;
     margin: 10px auto;
 }

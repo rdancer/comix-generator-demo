@@ -8,4 +8,6 @@ git+https://github.com/openai/openai-python
 fastapi
 uvicorn
 opencv-python-headless
+scikit-learn
+scipy
 numpy

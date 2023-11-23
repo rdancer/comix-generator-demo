@@ -345,6 +345,9 @@ def _rearrange_images(images: list[Image], captions: list[str], title: str) -> l
 
     # Step 1: Analyze images using the vision model
     observations = _analyze_images_with_vision_model(images)
+    if observations.count("") > 1:
+        logger.warn("More than one image failed to be analyzed, giving up on reordering")
+        return images
 
     # Step 2: Generate embeddings for captions and observations
     try:

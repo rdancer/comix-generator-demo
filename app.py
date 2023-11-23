@@ -68,6 +68,9 @@ async def generate_images(request: ImageRequest):
         # Generate individual panels using DALL-E image generation based on captions
         images = _generate_images(captions, title)  # This should be an async function
 
+        # Sometimes the images and captions are mismatched
+        images, captions = _rearrange_images(images, captions, title)
+
         # Compose the full strip from generated images
         final_image = create_composite_image(images, captions, title)  # This should be an async function
 
@@ -87,7 +90,8 @@ async def generate_images(request: ImageRequest):
             finalImage=final_image_data
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error("An error occured", exc_info=True)
+        raise e
 
 # Additional utility functions would need to be defined or imported
 # e.g., _generate_images, create_composite_image, image_to_base64
@@ -156,30 +160,81 @@ def generate_2x2_image_grid(captions: list[str], title: str) -> list[Image]:
     for caption in [caption.replace('\n', ' ') for caption in captions]:
         prompt += f"* {caption}\n"
     logger.debug(f"[_generate_images] prompt: {prompt}")
-    response = openai.images.generate(
-        model="dall-e-3", # Defaults to v2 as of November 2023
-        prompt=prompt,
-        n=1,
-        size="1024x1024",  # Setting the desired image size
-        response_format="b64_json"  # Requesting base64-encoded image
-    )
+    for retry in range(1, 4):
+        response = openai.images.generate(
+            model="dall-e-3", # Defaults to v2 as of November 2023
+            prompt=prompt,
+            n=1,
+            size="1024x1024",  # Setting the desired image size
+            response_format="b64_json"  # Requesting base64-encoded image
+        )
 
-    # Extract and decode the base64-encoded image
-    first_image = response.data[0]
-    b64_data = first_image.b64_json
-    decoded_image = base64.b64decode(b64_data)
+        # Extract and decode the base64-encoded image
+        first_image = response.data[0]
+        b64_data = first_image.b64_json
+        decoded_image = base64.b64decode(b64_data)
 
-    # Load the image into PIL and return it
-    image = Image.open(io.BytesIO(decoded_image))
+        # Load the image into PIL and return it
+        image = Image.open(io.BytesIO(decoded_image))
+        if is_proper_grid(image, tolerance=10):
+            logger.info(f"successfully generated image after {retry} {'try' if retry == 1 else 'tries'}")
+            break
+        else:
+            logger.warn(f"generated image is not a proper 2x2 grid, retrying")
+    else:
+        s = "failed to generate image after trying 3 times"
+        logger.error(s)
+        # raise(s)
 
     try:
         revised_prompt = response[0].revised_prompt
         if revised_prompt is not None and revised_prompt != prompt:
-            logger.debug(f"[_generate_images] revised_prompt: {revised_prompt}")
+            logger.debug(f"revised_prompt: {revised_prompt}")
     except:
         pass
 
     return image
+
+def is_proper_grid(image: Image, tolerance: int) -> bool:
+    """
+    Check if the image is a proper 2x2 grid.
+    
+    Use edge detection.
+    """
+    import cv2
+    import numpy as np
+
+    # Convert PIL Image to grayscale if not already
+    if image.mode != 'L':
+        image = image.convert('L')
+
+    # Convert PIL Image to NumPy array
+    image_np = np.array(image)
+
+    # Apply Canny edge detection
+    edges = cv2.Canny(image_np, 100, 200)
+
+    # Define divider line positions (for a 1024x1024 image)
+    vertical_line = edges[:, 512]
+    horizontal_line = edges[512, :]
+
+    # Count edges in the divider lines
+    vertical_edges = np.sum(vertical_line > 0)
+    horizontal_edges = np.sum(horizontal_line > 0)
+
+    # Check if the number of edges is within the tolerance
+    return vertical_edges <= tolerance and horizontal_edges <= tolerance
+
+
+def _rearrange_images(images: list[Image], captions: list[str], title: str) -> tuple[list[Image], list[str]]:
+    """
+    Rearrange the images and captions so that they are in the correct order.
+
+    Sometimes (often) the images and captions are shuffled.
+    """
+    logger.warn("Not implemented")
+    return images, captions
+
 
 def draw_text(draw, text, position, font, container_width):
     """

@@ -12,6 +12,8 @@ You can [try it here](https://comix-generator.rdancer.org) if you want.
 
 ![screencapture-comix-generator-rdancer-org-2023-11-21-07_53_07](https://github.com/rdancer/comix-generator-demo/assets/51028/91151adc-9dc7-450f-b0db-7535dc11a6bf)
 --
+![Screenshot](screenshot3.png)
+--
 ![Screenshot](screenshot2.png)
 --
 ![Screenshot](screenshot1.png)

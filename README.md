@@ -1,6 +1,6 @@
 # Comic strip generator
 
-Single-page web application with Flask backend.
+Single-page web application with FastAPI backend.
 
 Uses DALL-E (v2 and v3), and GPT-4.
 

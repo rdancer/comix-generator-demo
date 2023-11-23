@@ -1,54 +1,96 @@
-# app.py (Flask Backend)
+# app.py (FastAPI Backend)
 
-import openai
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image, ImageDraw, ImageFont
 import io
 import base64
 import textwrap
 import os
+import openai
+from pydantic import BaseModel
+from typing import List
+import logging
+from logger_config import get_logger
 
 # Hardcoded config vars are in config.py
 from config import *
 
-app = Flask(__name__)
-CORS(app)
+
+logger = get_logger(logging.DEBUG)
+logger.info(f"Starting up rdancer's {__name__}")
+
+app = FastAPI()
+
+# Set up CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://comix-generator.rdancer.org"],
+    allow_credentials=True,
+    allow_methods=["POST", "GET"],
+    allow_headers=["*"],  # Allows all headers
+)
 
 # openai.api_key = os.getenv('OPENAI_API_KEY') # This is the default
 
-@app.route('/generate-images', methods=['POST'])
-def generate_images():
+# Define Pydantic models for request and response
+class ImageRequest(BaseModel):
+    captions: List[str]
+    title: str
+
+class ImageData(BaseModel):
+    content_type: str
+    base64: str
+    original_prompt: str
+
+class CompositeImage(BaseModel):
+    content_type: str
+    base64: str
+
+class ImageResponse(BaseModel):
+    images: List[ImageData]
+    finalImage: CompositeImage
+
+@app.get("/test")
+async def test_cors():
+    from fastapi.responses import JSONResponse
+
+    content = {"message": "Test CORS"}
+    headers = {"Access-Control-Allow-Origin": "*"}
+    return JSONResponse(content=content, headers=headers)
+
+@app.post('/generate-images', response_model=ImageResponse)
+async def generate_images(request: ImageRequest):
     try:
-        data = request.json
-        captions = [caption.strip() for caption in data['captions']]
-        title = data['title'].strip()
+        captions = [caption.strip() for caption in request.captions]
+        title = request.title.strip()
 
         # Generate individual panels using DALL-E image generation based on captions
-        images = _generate_images(captions, title)
+        images = _generate_images(captions, title)  # This should be an async function
 
         # Compose the full strip from generated images
-        final_image = create_composite_image(images, captions, title)
+        final_image = create_composite_image(images, captions, title)  # This should be an async function
 
-        images_data = [{
-            'content_type': 'image/jpeg',
-            'base64': image_to_base64(image, 'JPEG'),
-            'original_prompt': caption,
-        } for caption, image in zip(captions, images)]
-        
-        final_image_data = {
-            'content_type': 'image/png',
-            'base64': image_to_base64(final_image, 'PNG'),
-        }
-        
-        return jsonify({
-            'images': images_data,
-            'finalImage': final_image_data
-        })
+        images_data = [ImageData(
+            content_type='image/jpeg',
+            base64=image_to_base64(image, 'JPEG'),
+            original_prompt=caption,
+        ) for caption, image in zip(captions, images)]
+
+        final_image_data = CompositeImage(
+            content_type='image/png',
+            base64=image_to_base64(final_image, 'PNG'),
+        )
+
+        return ImageResponse(
+            images=images_data,
+            finalImage=final_image_data
+        )
     except Exception as e:
-        # Return a 500 Internal Server Error with the exception message
-        return jsonify({'error': str(e)}), 500
+        raise HTTPException(status_code=500, detail=str(e))
 
+# Additional utility functions would need to be defined or imported
+# e.g., _generate_images, create_composite_image, image_to_base64
 
 def create_fourth_panel_prompt(captions: list[str]) -> str:
     """
@@ -71,7 +113,7 @@ def create_fourth_panel_prompt(captions: list[str]) -> str:
         ],
     )
 
-    print(f"[DEBUG] [create_fourth_panel_prompt] auto-generated fourth panel caption: {completion.choices[0].message}")
+    logger.debug(f"[create_fourth_panel_prompt] auto-generated fourth panel caption: {completion.choices[0].message}")
     return completion.choices[0].message.content.strip()
 
 def _generate_images(captions: list[str], title: str) -> list[Image]:
@@ -113,7 +155,7 @@ def generate_2x2_image_grid(captions: list[str], title: str) -> list[Image]:
     prompt += f"{title}\n" if title else ""
     for caption in [caption.replace('\n', ' ') for caption in captions]:
         prompt += f"* {caption}\n"
-    print(f"DEBUG [_generate_images] prompt: {prompt}")
+    logger.debug(f"[_generate_images] prompt: {prompt}")
     response = openai.images.generate(
         model="dall-e-3", # Defaults to v2 as of November 2023
         prompt=prompt,
@@ -133,7 +175,7 @@ def generate_2x2_image_grid(captions: list[str], title: str) -> list[Image]:
     try:
         revised_prompt = response[0].revised_prompt
         if revised_prompt is not None and revised_prompt != prompt:
-            print(f"DEBUG [_generate_images] revised_prompt: {revised_prompt}")
+            logger.debug(f"[_generate_images] revised_prompt: {revised_prompt}")
     except:
         pass
 
@@ -221,4 +263,5 @@ def image_to_base64(image, format):
     return image_base64
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    import uvicorn
+    uvicorn.run("app:app", host="0.0.0.0", port=5000, reload=True)

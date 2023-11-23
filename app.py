@@ -255,7 +255,7 @@ def _analyze_images_with_vision_model(images: list[Image]) -> list[str]:
                     {
                         "role": "user",
                         "content": [
-                            {"type": "text", "text": "What's in this image, in 3-5 words?"},
+                            {"type": "text", "text": "What's in this image, in 10-15 words?"},
                             {
                                 # Note that the type is always URL, so we send it as data URL
                                 "type": "image_url",

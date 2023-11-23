@@ -71,6 +71,11 @@ footer {
     padding: 5px;
 }
 
+/* Leave space for the footer at the bottom (fixes: body content is obscured by footer) */
+body:after {
+    padding-bottom: 25px;
+}
+
 /* Footer link styling */
 footer a {
     color: #007bff; /* Change to desired link color */

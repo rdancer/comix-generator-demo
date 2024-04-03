@@ -5,7 +5,15 @@
     <title>Comix Generator Demo</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="/favicon.png">
-    <meta http-equiv="refresh" content="0; url=/quota-exceeded.html">
+    <script>
+        const searchParams = new URLSearchParams(window.location.search);
+        const token = searchParams.get('token');
+        if (token) {
+            window.localStorage.setItem('token', token);
+        } else {
+            window.location.href = '/quota-exceeded.html';
+        }
+    </script>
 </head>
 <body>
     <h1>Comix Generator Demo</h1>

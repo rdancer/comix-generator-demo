@@ -9,3 +9,9 @@ run: kill_all_on_port
 .PHONY: kill_all_on_port
 kill_all_on_port:
 	kill -9 `lsof -t -i :$(PORT)` 2>/dev/null || :
+
+.PHONY: tokens
+tokens:
+	. venv/bin/activate && for i in `seq 5`; do \
+		python3 token_generator.py 10000; \
+	done 2>/dev/null

@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from typing import List
 import logging
 from logger_config import get_logger
+from token_verifier import TokenVerifier
 
 # Hardcoded config vars are in config.py
 from config import *
@@ -38,6 +39,7 @@ class ImageRequest(BaseModel):
     captions: List[str]
     title: str
 
+    token: str
 class ImageData(BaseModel):
     content_type: str
     base64: str
@@ -61,6 +63,15 @@ async def test_cors():
 
 @app.post('/generate-images', response_model=ImageResponse)
 async def generate_images(request: ImageRequest):
+    token = request.token.strip()
+    print(f"DEBUG: token: {token}, request: {request}")
+    try:
+        verifier = TokenVerifier(token)
+    except Exception as e:
+        logger.error("Error processing token", exc_info=True)
+        raise HTTPException(status_code=401, detail="Invalid token")
+    if not verifier.update_quota(1_000):
+        raise HTTPException(status_code=429, detail="Quota exceeded")
     try:
         captions = [caption.strip() for caption in request.captions]
         title = request.title.strip()

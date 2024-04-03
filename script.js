@@ -11,6 +11,7 @@ document.getElementById('generate-button').addEventListener('click', function() 
         document.getElementById('caption2').value,
         document.getElementById('caption3').value
     ];
+    const token = window.localStorage.getItem('token');
 
     // strip leading and trailing whitespace from title and captions
     title = title.trim();
@@ -56,13 +57,17 @@ document.getElementById('generate-button').addEventListener('click', function() 
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ title: title, captions: captions })
+        body: JSON.stringify({
+            title: title,
+            captions: captions,
+            token: token,
+        })
     })
     .then(response => {
         if (!response.ok) {
             // If the response is not ok, throw an error with the status text
             return response.json().then(err => {
-                throw new Error(err.error || 'Unknown error');
+                throw new Error(err.error || err.detail || 'Unknown error');
             });
         }
         return response.json();

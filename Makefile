@@ -1,4 +1,4 @@
-OPENAI_API_KEY=$(shell cat ~/OPENAI_API_KEY-rdancer.txt)
+OPENAI_API_KEY=$(shell cat ~/OPENAI_API_KEY-comix-generator.rdancer.org.txt)
 
 PORT=5000
 

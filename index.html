@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png">
     <script>
         const searchParams = new URLSearchParams(window.location.search);
-        const token = searchParams.get('token');
+        const token = searchParams.get('token') || window.localStorage.getItem('token');
         if (token) {
             window.localStorage.setItem('token', token);
         } else {
